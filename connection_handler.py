@@ -9,7 +9,7 @@ MY_PORT = 8888
 
 
 class ConnectionHandler:
-    def __init__(self, enabled, buff, cam_stats, rut_hdl):
+    def __init__(self, enabled, buff, cam_stats, rut_hdl=None):
         self.enabled = enabled
         self.cam_ip = {}
         self.ip_cam = {}
@@ -24,10 +24,11 @@ class ConnectionHandler:
 
         self.invoke_thr = Thread(target=self.invoke_connection)
         self.buff_thr = Thread(target=self.wait_for_buffer)
-        self.rut_client_thr = Thread(target=self.discover_router_clients)
         self.invoke_thr.start()
         self.buff_thr.start()
-        self.rut_client_thr.start()
+        if self.rut_hdl is not None:
+            self.rut_client_thr = Thread(target=self.discover_router_clients)
+            self.rut_client_thr.start()
 
     def discover_router_clients(self):
         while True:
