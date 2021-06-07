@@ -1,6 +1,6 @@
 import socket
 from threading import Thread
-from time import sleep, clock, localtime
+from time import sleep, perf_counter, localtime
 from re import findall
 from log_handler import Logger
 log = Logger.log
@@ -152,9 +152,9 @@ class ConnectionHandler:
         while True:
             while self.enabled[0]:
                 for cam in self.cam_hdl.cams.values():
-                    if clock() - cam.last_view_request > CAM_MAX_WAIT_FOR_REQUEST_SEC:
+                    if perf_counter() - cam.last_view_request > CAM_MAX_WAIT_FOR_REQUEST_SEC:
                         self.uncapture_cam(cam.name)
-                    if not self.debug_capture and clock() - cam.last_buff_time > CAM_MAX_FRAME_DELAY_SEC:
+                    if not self.debug_capture and perf_counter() - cam.last_buff_time > CAM_MAX_FRAME_DELAY_SEC:
                         if cam.is_sleep_enabled:
                             cur_time = localtime()
                             cur_time = '{0:02}:{1:02}:{2:02}'.format(cur_time.tm_hour, cur_time.tm_min, cur_time.tm_sec)
@@ -235,7 +235,7 @@ class ConnectionHandler:
                         log('echo from {0} : {1}'.format(rec_addr, rec_buff))
                     elif self.cam_hdl.exists(rec_addr[0]):
                         cur_cam = self.cam_hdl.get_cam(rec_addr[0])
-                        cur_time = clock()
+                        cur_time = perf_counter()
                         if cur_time - cur_cam.last_buff_time > 30 or cur_cam.last_buff_time == -1:
                             cur_cam.first_buff_time = cur_time
                         cur_cam.last_buff_time = cur_time

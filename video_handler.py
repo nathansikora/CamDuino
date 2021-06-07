@@ -1,7 +1,7 @@
 from cv2 import imencode, imread
 from time import sleep
 import numpy as np
-from time import clock
+from time import perf_counter
 
 SLEEP_BETWEEN_FRAMES_TIME = 0.3
 
@@ -32,8 +32,9 @@ class VideoHandler:
                        b'Content-Type: image/jpeg\r\n\r\n' + self.offline_image + b'\r\n')
             else:
                 cam = self.cam_hdl.get_cam(cam_name)
-                cam.last_view_request = clock()
-                if clock() - cam.last_buff_time > 30:
+                cam.is_capturing = True
+                cam.last_view_request = perf_counter()
+                if perf_counter() - cam.last_buff_time > 30:
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + self.offline_image + b'\r\n')
 
