@@ -6,17 +6,17 @@ from time import sleep
 from threading import Thread
 from json import load
 
-with open('settings.json', 'r') as ff:
+with open('configs/settings.json', 'r') as ff:
     dd = load(ff)['router_handler']
     DRIVER_PATH = dd['DRIVER_PATH']
     BRAVE_PATH = dd['BRAVE_PATH']
     ROUTER_ADDRESS = dd['ROUTER_ADDRESS']
     PASS = dd['PASS']
 
-DRIVER_PATH = r"C:\Users\Nathan\Downloads\chromedriver_win32\chromedriver.exe"
-BRAVE_PATH = r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe"
-ROUTER_ADDRESS = 'http://192.168.1.1'
-PASS = 'gor47tim'
+#DRIVER_PATH = r"C:\Users\Nathan\Downloads\chromedriver_win32\chromedriver.exe"
+#BRAVE_PATH = r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe"
+#ROUTER_ADDRESS = 'http://192.168.1.1'
+#PASS = 'gor47tim'
 SLEEP_TIME_SEC = 30
 
 
@@ -28,7 +28,7 @@ class RouterHandler:
         option = webdriver.ChromeOptions()
         option.binary_location = brave_path
         option.add_argument("--incognito")
-        option.add_argument("--headless")
+        #option.add_argument("--headless")
 
         self.browser = webdriver.Chrome(executable_path=driver_path, chrome_options=option)
         clnt_thr = Thread(target=self.get_clients)
