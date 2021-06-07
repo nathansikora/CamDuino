@@ -1,0 +1,1 @@
+{"name": "CAM1", "is_watchable": true, "is_sleep_enabled": false, "sleep_from": "18:00:00", "sleep_to": "06:00:00", "sleep_sess": "01:00:00", "is_nap_enabled": false, "nap_for": "00:00:30", "frames_per_capture": 60, "rot_deg": 90}
