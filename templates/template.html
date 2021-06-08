@@ -11,7 +11,7 @@
 			<select id="cam" onchange="window.location.href = '/' + document.getElementById('cam').value;"></select>
 			voltage: {{voltage}}     ON time: {{ ontime|safe }}
 			<br><br>
-            <img src="{{video_feed_url|safe}}" height = "30%" width="30%"></img>
+            <img id="video_feed" src="{{video_feed_url|safe}}" height = "30%" width="30%"></img>
         </div>
     </div>
 </div>
@@ -31,6 +31,13 @@
 	});
 	cam_list.selectedIndex = selected_id;
 	
+	function checkPageFocus() {
+		if (document.hasFocus())
+			document.getElementById("video_feed").src = "{{video_feed_url|safe}}";
+		else
+			document.getElementById("video_feed").src = "";
+	}
+	setInterval(checkPageFocus, 500);
 </script>
 </body>
 </html>
