@@ -1,6 +1,7 @@
 from threading import Thread
 from time import sleep, localtime
 from numpy.random import randint
+from copy import copy
 
 TOKEN_N = 128
 CHARS = [chr(x) for x in list(range(48, 58)) + list(range(65, 91)) + list(range(97, 123))]
@@ -31,7 +32,7 @@ class UserHandler:
         return new_token
 
     def tokenize_all_users(self):
-        for token in self.users:
+        for token in copy(self.users):
             self.retokenize(token)
         return self.users
 

@@ -1,5 +1,5 @@
 from main_handler import MainHandler
-
+from time import perf_counter
 from flask import Flask, render_template, make_response, Response, request
 from json import dumps
 
@@ -94,10 +94,9 @@ def index(cam_name='CAM1'):
                                              video_feed_url='/video_feed?cam={}'.format(cam_name),
                                              voltage=cam.voltage,
                                              ontime=cam.last_buff_time - cam.first_buff_time))
-
-        M.cnt_hdl.capture_cam(cam_name)
-
         resp.set_cookie('token', new_token)
+        M.cnt_hdl.capture_cam(cam_name)
+        cam.last_view_request = perf_counter()
         return resp
     else:
         return "404"
