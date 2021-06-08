@@ -32,7 +32,8 @@ class VideoHandler:
                        b'Content-Type: image/jpeg\r\n\r\n' + self.offline_image + b'\r\n')
             else:
                 cam = self.cam_hdl.get_cam(cam_name)
-                cam.is_capturing = True
+                if cam.is_capturing == False:
+                    self.cam_hdl.capture_cam(cam_name)
                 cam.last_view_request = perf_counter()
                 if perf_counter() - cam.last_buff_time > 30:
                     yield (b'--frame\r\n'
