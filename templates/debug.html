@@ -1,0 +1,130 @@
+<html>
+<head>
+    <title>PuppyCAM-DEBUG</title>
+</head>
+<body>
+
+<a href="/..">MAIN</a>
+<br><br>
+	format: REG=VAL\n
+	<br><br>
+	<select id="cam" onchange="set_cams_config()">
+
+	</select>
+	<br><br>
+	<div id="command_place">
+		<form id="form_reg_set" method="post">		
+			<input name="regset_form" type="text" hidden=true></input>
+			<input id="input_hidden_cam_1" name="cam_name" type="text" hidden=true></input>
+			<textarea id="area_reg_text" name="regset" rows="5" cols="22"></textarea>
+			<br>	
+		</form>
+		<button id='submit' onclick="submit()">submit</button>
+		<button id='default' onclick="set_preset('default')">default</button>
+	</div>
+	<br>
+	<div>
+		<form method="post">
+			<input name="camconfig_form" type="text" hidden=true></input>
+			<input id="input_hidden_cam_2" name="cam_name" type="text" hidden=true></input>
+			<input type="checkbox" id="is_watchable" name="is_watchable" value="true">Watchable</input>
+			<br>
+			<input type="checkbox" id="is_sleep_enabled" name="is_sleep_enabled" value="true">Sleep chedule</input>
+			from: <input value="00:00:00" id="sleep_from" name="sleep_from" type="time" step="1">  to: <input value="00:00:00" id="sleep_to" name="sleep_to" type="time" step="1"> sess: <input value="00:00:00" id="sleep_sess" name="sleep_sess" type="time" step="1">
+			<br>
+			<input type="checkbox" id="is_nap_enabled" name="is_nap_enabled" value="true">Nap schedule</input>
+			for: <input value="00:00:00" id="nap_for" name="nap_for" type="time" step="1">
+			<br>
+			Frames Per Capture
+			<input value="0" id="frames_per_capture" name="frames_per_capture" type="number" min="0" max="1000">
+			<br>
+			<input type="submit" value="Submit">
+		</form>
+	</div>
+	<div>
+		<form method="post">
+			<input id="input_hidden_cam_3" name="cam_name" type="text" hidden=true></input>
+			<button id="rot_left" name="rot_left">-90°</button>
+			<button id="rot_right" name="rot_right">+90°</button>
+		</form>
+	</div>
+	<div>
+		<form method="post">
+			<input id="input_hidden_cam_4" name="cam_name" type="text" hidden=true></input>
+			<button id="save_but" name="save_but">save</button>
+		</form>
+	</div>
+	
+	<script>	
+		if (window.location.href.indexOf('token') != -1) {
+			window.location.href = '/debug';
+		}
+		var rot_deg = 0;
+		var presets = {{presets|safe}};
+		var cam_configs = {{cam_configs|safe}};	
+		set_existing_cams() ;
+		set_cams_config();
+		presets.forEach(function(p) {
+		let btn = document.createElement("button");
+			btn.innerHTML = p['name'];
+			btn.id = p['name'];
+			btn.onclick = function(item) {set_preset(dict2string(p['val']))};
+			document.getElementById("command_place").appendChild(btn);
+		})			
+		
+		function submit(){
+			new_regest = document.getElementById('area_reg_text').value.replaceAll('\n', ',');
+			document.getElementById('area_reg_text').value = new_regest;			
+			document.getElementById("form_reg_set").submit();
+		}
+		/*
+		function submit(){
+			cam = document.getElementById('cam').value;
+			regest = document.getElementById('area_reg_text').value.replaceAll('\n', ',');
+			if ((cam.length > 0) && (regest.length > 0))
+				window.location.href = '?cam=' + cam + '&regset=' + regest; 
+		}
+		*/
+		
+		function set_preset(value){
+			document.getElementById('area_reg_text').value = value;
+		}
+		
+		function dict2string(d){
+			ss = '';
+			for (const [key, value] of Object.entries(d)) {
+			  ss += key + '=' + value + '\n'
+			}
+			return ss
+		}
+		
+		function set_existing_cams() {
+			existing_cams = Object.keys(cam_configs);
+			cam_list = document.getElementById("cam");
+			existing_cams.forEach(function(item) {
+				var option = document.createElement('option');
+				option.text = item;
+				cam_list.appendChild(option);
+			});
+		}
+		
+		function set_cams_config() {
+			cur_cam = document.getElementById("cam").value;
+			document.getElementById("input_hidden_cam_1").value = cur_cam;
+			document.getElementById("input_hidden_cam_2").value = cur_cam;
+			document.getElementById("input_hidden_cam_3").value = cur_cam;
+			document.getElementById("input_hidden_cam_4").value = cur_cam;
+			cur_config = cam_configs[cur_cam];
+			document.getElementById("is_watchable").checked = cur_config["is_watchable"];
+			document.getElementById("is_sleep_enabled").checked = cur_config["is_sleep_enabled"];
+			document.getElementById("sleep_from").value = cur_config["sleep_from"];
+			document.getElementById("sleep_to").value = cur_config["sleep_to"];
+			document.getElementById("sleep_sess").value = cur_config["sleep_sess"];
+			document.getElementById("is_nap_enabled").checked = cur_config["is_nap_enabled"];
+			document.getElementById("nap_for").value = cur_config["nap_for"];
+			document.getElementById("frames_per_capture").value = cur_config["frames_per_capture"];
+		}
+		
+	</script>
+</body>
+</html>

@@ -1,24 +1,36 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-    <title>Live Streaming Demonstration</title>
+    <title>PuppyCAM</title>
 </head>
 <body>
-<div class="container">
+<a href="/debug">DEBUG</a><div class="container">
     <div class="row">
         <div class="col-lg-8  offset-lg-2">
-            <h3 class="mt-5">Live Streaming</h3>
-            <img src="{{ url_for('video_feed') }}" width="100%">
+            <h3 class="mt-5">PuppyCAM</h3>
+			<select id="cam" onchange="window.location.href = '/' + document.getElementById('cam').value;"></select>
+			voltage: {{voltage}}     ON time: {{ ontime|safe }}
+			<br><br>
+            <img src="{{video_feed_url|safe}}" height = "30%" width="30%"></img>
         </div>
     </div>
 </div>
+<script>
+	var existing_cams = {{existing_cams|safe}};
+	var current_cam = {{current_cam|safe}};
+	var selected_id = existing_cams.indexOf(current_cam);
+		if (window.location.href.indexOf('token') != -1) {
+			window.location.href = '/';
+	}
+	
+	cam_list = document.getElementById("cam");
+	existing_cams.forEach(function(item) {
+		var option = document.createElement('option');
+		option.text = item;
+		cam_list.appendChild(option);
+	});
+	cam_list.selectedIndex = selected_id;
+	
+</script>
 </body>
 </html>
