@@ -1,10 +1,13 @@
 from log_handler import Logger
 from os.path import exists
 from json import dump, load
-from time import asctime
+from time import asctime, sleep, perf_counter
+from threading import Thread
+from connection_handler import CONNECTION_OK_STR
+from utilities import *
 log = Logger.log
 
-'''BASE_CONFIG_ATTRS = ['name', 'is_connected', 'is_capturing',
+'''BASE_CONFIG_ATTRS = ['name', 'is_connected', 'is_requested_capturing',
          'is_watchable', 'voltage', 'is_sleep_enabled', 'sleep_from', 'sleep_to',
          'sleep_sess', 'is_nap_enabled', 'nap_for', 'frames_per_capture', 'rot_deg']'''
 
@@ -33,6 +36,8 @@ class CameraHandler:
             self._ip_2_cam[ip] = name
             self.cams[name].ip = ip
             log('discovered {0} at {1}'.format(name, ip))
+        self.cams[name].is_sleeping = False
+        self.cams[name].state = 'discovered'
 
     def exists(self, name_or_ip):
         if name_or_ip in self._ip_2_cam or name_or_ip in self.cams_by_name:
@@ -50,6 +55,9 @@ class CameraHandler:
     def basic_configs(self):
         return {cam.name: cam.base_config() for cam in self.cams.values()}
 
+    def capturing_cams(self):
+        return ''.join([key + ', 'for key, val in self.cams_by_name.items() if val.is_requested_capturing])[:-1]
+
 
 class Camera:
     def __init__(self, name, ip=None, sc=None):
@@ -59,7 +67,7 @@ class Camera:
         self.is_ahoy = False
         #self.is_connected = False
         #self.is_discovered
-        self.is_capturing = False
+        self.is_requested_capturing = False
         self.is_watchable = True
         self.voltage = 0
         self.is_sleep_enabled = True
@@ -70,6 +78,10 @@ class Camera:
         self.nap_for = '00:00:30'
         self.frames_per_capture = 60
 
+        self.state = 'None'
+        self.is_sleeping = False
+        self.sleep_type = None
+        self.connection_fail_k = 0
         self.next_up = ''
         self.waiting_commands = []
         self.last_buff_time = -1
@@ -93,13 +105,17 @@ class Camera:
 
     @property
     def is_connected(self):
+        self.is_ahoy = False
+        Thread(target=self._is_connected_thread).start()
+        return self.is_ahoy
+
+    def _is_connected_thread(self):
         if self.sc is not None:
             try:
-                self.sc.send(b'')
-                return True
+                self.sc.send(b'TEST' + CONNECTION_OK_STR)
+                sleep(1)
             except:
-                return False
-        return False
+                return
 
     @property
     def is_discovered(self):
@@ -122,6 +138,13 @@ class Camera:
         if len(self.sleep_sess) > 0:
             return time_2_sec(self.sleep_sess)
         return 0
+
+    def handle_sleep_success(self, s_cur_time):
+        self.next_up = add_time(s_cur_time, self.sleep_sess)
+        sleep(0.1)
+        self.sc.close()
+        self.is_sleeping = True
+        self.state = 'sleeping'
 
     def base_config(self):
         return {att: self.__getattribute__(att) for att in BASE_CONFIG_ATTRS}

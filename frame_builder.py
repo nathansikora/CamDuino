@@ -3,7 +3,7 @@ import numpy as np
 from time import sleep
 from re import split, search, DOTALL
 
-IM_WIDTH = 200
+IM_WIDTH = 300
 MINI_IM_WIDTH = int(IM_WIDTH/2)
 IM_HEIGHT = 240
 MAX_FRAMES_PER_CAM_BUFFER = 1

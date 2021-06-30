@@ -39,12 +39,11 @@ class MainHandler:
         self.frm_bld = FrameBuilder(self.cam_hdl)
         self.cnt_hdl = ConnectionHandler(self.enabled, self.rut_hdl, self.cam_hdl, PRESETS)
         self.usr_hdl = UserHandler(USERS, self.users)
-        for token, user in self.users.items():
-            print('{}:   {}'.format(user['name'], token))
-
         self.mil_hdl = EmailHandler(self.users, self.out_site, self.usr_hdl.tokenize_all_users)
-        self.vid_hdl = VideoHandler(self.cam_hdl, self.enabled, OFFLINE_IMAGE_PATH)
+        self.vid_hdl = VideoHandler(self.cam_hdl, self.cnt_hdl, self.enabled, OFFLINE_IMAGE_PATH)
 
+        for token, user in self.users.items():
+            print('{}:   {}{}'.format(user['name'], self.out_site[0], token))
 
         enb_thr = Thread(target=self.is_enable)
         enb_thr.start()

@@ -2,7 +2,10 @@ from main_handler import MainHandler
 from time import perf_counter
 from flask import Flask, render_template, make_response, Response, request
 from json import dumps
+import logging
 
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 NETWORK_MODE = True
 app = Flask(__name__)
@@ -30,7 +33,12 @@ def video_feed():
     cookie = request.cookies.get('token')
     cam_name = request.args['cam']
     if cookie in M.usr_hdl.users and cam_name in M.cam_hdl.cams:
-        return Response(M.vid_hdl.gen_frames(cam_name), mimetype='multipart/x-mixed-replace; boundary=frame')
+        resp = Response(M.vid_hdl.gen_frames(cam_name), mimetype='multipart/x-mixed-replace; boundary=frame')
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        resp.headers['Cache-Control'] = 'public, max-age=0'
+        return resp
     else:
         return '404'
 
@@ -63,7 +71,7 @@ def debug_page():
                 fpc = request.form.get('frames_per_capture')
                 if fpc is not None and len(fpc) > 0:
                     if cam.frames_per_capture != int(fpc):
-                        cam.waiting_commands.append((M.cnt_hdl.debug_set_vars, (('check_connection_frames', fpc), cam_name)))
+                        cam.waiting_commands.append((M.cnt_hdl.debug_set_vars, ([('check_connection_frames', fpc), ], cam_name)))
                 cam.set_configs(request.form)
 
         resp = make_response(render_template(r"debug.html",
@@ -81,19 +89,24 @@ def reroute_cam(cam_name):
     else:
         return '404'
 
+
 @app.route('/')
 def index(cam_name='CAM1'):
     """Video streaming home page."""
-
-    new_token = validate_connection(request)
+    if request.args.get('info') is not None:
+        new_token = validate_connection(request, no_retokenize=True)
+    else:
+        new_token = validate_connection(request, no_retokenize=False)
     if new_token is not None:
         existing_cams = list(M.cam_hdl.cams.keys())
         cam = M.cam_hdl.get_cam(cam_name)
-        resp = make_response(render_template(r"template.html", existing_cams=dumps(existing_cams),
-                                             current_cam=dumps(cam_name),
-                                             video_feed_url='/video_feed?cam={}'.format(cam_name),
-                                             voltage=cam.voltage,
-                                             ontime=cam.last_buff_time - cam.first_buff_time))
+        if request.args.get('info') is not None:
+            resp = '{} state: {} voltage: {}, ontime: {} <br> active cams: {}'.format(cam_name, cam.state, cam.voltage, cam.last_buff_time - cam.first_buff_time, M.cam_hdl.capturing_cams()[:-1])
+            return resp
+        else:
+            resp = make_response(render_template(r"template.html", existing_cams=dumps(existing_cams),
+                                                 current_cam=dumps(cam_name),
+                                                 video_feed_url='/video_feed?cam={}'.format(cam_name)))
         resp.set_cookie('token', new_token)
         M.cnt_hdl.capture_cam(cam_name)
         cam.last_view_request = perf_counter()
@@ -101,7 +114,7 @@ def index(cam_name='CAM1'):
     else:
         return "404"
 
-def validate_connection(request):
+def validate_connection(request, no_retokenize=False):
     token = None
     get_arg = request.args.get('token')
     cookie = request.cookies.get('token')
@@ -111,6 +124,8 @@ def validate_connection(request):
         token = cookie
 
     if token is not None:
+        if no_retokenize:
+            return token
         new_token = M.usr_hdl.retokenize(token)
         return new_token
     return None

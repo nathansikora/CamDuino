@@ -1,21 +1,33 @@
 <!doctype html>
 <html lang="en">
+<style>
+div { 
+    zoom: 1.5; 
+    -moz-transform: scale(3); 
+    -moz-transform-origin: 0 0;
+} 
+</style>
 <head>
     <title>PuppyCAM</title>
 </head>
 <body>
-<a href="/debug">DEBUG</a><div class="container">
+<div>
+	<a href="/debug">DEBUG</a><div class="container">
+</div>
     <div class="row">
         <div class="col-lg-8  offset-lg-2">
             <h3 class="mt-5">PuppyCAM</h3>
 			<select id="cam" onchange="window.location.href = '/' + document.getElementById('cam').value;"></select>
-			voltage: {{voltage}}     ON time: {{ ontime|safe }}
+			<p id="info_div"></p>
 			<br><br>
-            <img id="video_feed" src="{{video_feed_url|safe}}" height = "30%" width="30%"></img>
+            <img id="video_feed" src="{{video_feed_url|safe}}" height = "90%" width="90%"></img>
         </div>
     </div>
 </div>
 <script>
+	
+	
+	
 	var existing_cams = {{existing_cams|safe}};
 	var current_cam = {{current_cam|safe}};
 	var selected_id = existing_cams.indexOf(current_cam);
@@ -32,12 +44,25 @@
 	cam_list.selectedIndex = selected_id;
 	
 	function checkPageFocus() {
-		if (document.hasFocus())
-			document.getElementById("video_feed").src = "{{video_feed_url|safe}}";
-		else
-			document.getElementById("video_feed").src = "";
+		video_elem = document.getElementById("video_feed");
+		video_elemhidden = true;
+		if (document.hasFocus() && video_elem.complete) {		
+			video_elem.src = "{{video_feed_url|safe}}" + "&t=" + Math.random();
+			video_elem.hidden = false;
+		}
 	}
-	setInterval(checkPageFocus, 500);
+	
+	function update_info() {
+		var cam_state_req = new XMLHttpRequest();
+		cam_state_req.open("GET", "/" + current_cam + "?info");
+		cam_state_req.send();
+		cam_state_req.onload = function(e) {
+		  document.getElementById("info_div").innerHTML  = cam_state_req.response;
+		}
+	}
+	update_info();
+	setInterval(checkPageFocus,200);
+	setInterval(update_info,1000);
 </script>
 </body>
 </html>
